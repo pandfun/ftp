@@ -21,8 +21,8 @@ client_interactions.o : client/client_interactions.c
 
 
 # Server
-server : server.o connect_server.o server_interactions.o err.o
-	gcc server.o connect_server.o server_interactions.o err.o -o r_server
+server : server.o connect_server.o server_interactions.o err.o file_interactions.o
+	gcc server.o connect_server.o server_interactions.o err.o file_interactions.o -o r_server
 
 # Server files
 
@@ -34,6 +34,9 @@ connect_server.o : server/connect_server.c
 
 server_interactions.o : server/server_interactions.c
 	gcc -c server/server_interactions.c
+
+file_interactions.o : server/file_interactions.c
+	gcc -c server/file_interactions.c
 
 
 # Core files

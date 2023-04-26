@@ -1,1 +1,6 @@
 secrets
+
+# Binary files/executables
+*.o
+r_client
+r_server

@@ -24,12 +24,46 @@ void client_interactions(int server_socket)
 
 		
 		if (!strcmp(buffer, "exit")) {
+			
 			printf("Connection terminating...\n");
-			send(server_socket, buffer, strlen(buffer)+1, 0);
+			rc = send(server_socket, buffer, strlen(buffer)+1, 0);
+			if (rc < 0)
+				err("rc");
+
 			return;
 
+		} else if (!strcmp(buffer, "ls")) {
+			
+			rc = send(server_socket, buffer, strlen(buffer)+1, 0);
+			if (rc < 0)
+				err("send");
+
+			memset(buffer, 0, strlen(buffer));
+			recv(server_socket, buffer, BUFFSIZE, 0);
+			
+			printf("%s", buffer);
+			
+			memset(buffer, 0, strlen(buffer));
+			continue;
+
+		} else if (!strcmp(buffer, "ls -a")) {
+
+			rc = send(server_socket, buffer, strlen(buffer)+1, 0);
+			if (rc < 0)
+				err("send");
+
+			memset(buffer, 0, strlen(buffer));			
+			recv(server_socket, buffer, BUFFSIZE, 0);
+
+			printf("%s", buffer);
+
+			memset(buffer, 0, strlen(buffer));
+			continue;
+
 		} else {
+
 			printf("%s: command not found\n");
+			
 			memset(buffer, 0, strlen(buffer) * sizeof(char));
 			continue;
 			

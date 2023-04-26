@@ -1,4 +1,5 @@
 #include "../core/core.h"
+#include "server.h"
 
 
 
@@ -14,8 +15,8 @@ void server_interactions(int client_socket)
 	char buffer[BUFFSIZE];
 	memset(buffer, 0, sizeof(char) * BUFFSIZE);
 
-	int i = 1;
-	while (i-- > 0) {
+
+	while (1) {
 
 		rc = recv(client_socket, buffer, BUFFSIZE, 0);
 		if (rc < 0)
@@ -25,7 +26,20 @@ void server_interactions(int client_socket)
 		if (!strcmp(buffer, "exit")) {
 			return;
 
+		} else if (!strcmp(buffer, "ls")) {
+
+			list_dir(client_socket, 0);
+			memset(buffer, 0, strlen(buffer));
+			continue;
+
+		} else if (!strcmp(buffer, "ls -a")) {
+
+			list_dir(client_socket, 1);
+			memset(buffer, 0, strlen(buffer));
+			continue;
+
 		} else {
+
 			memset(buffer, 0, strlen(buffer) * sizeof(char));
 			continue;
 			
