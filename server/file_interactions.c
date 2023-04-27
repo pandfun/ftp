@@ -60,3 +60,44 @@ void list_dir(int socket, int flag)
 
 	return;
 }
+
+
+/*
+ * This function which look for a file in the pwd
+ * and send it to the client in a file buffer
+ */
+void send_file(int socket)
+{
+	int rc;
+	char file_name[20] = {0};
+	char filebuff[FILEBUFF];
+	FILE *fptr;
+
+	rc = recv(socket, file_name, 20 * sizeof(char), 0);
+	if (rc < 0)
+		err("recv");
+	
+	/* 
+	 * TODO : default fail case is to terminate program
+	 * Fix so it alerts the client and gives them another 
+	 * chance to enter the file name or cancel operation
+	 * 
+	 * Cur Behaviour : Detects file not found, server terminates
+	 * but client will still be active, which will also 
+	 * eventually terminate 
+	 */
+	fptr = fopen(file_name, "r");
+	if (fptr == 0)
+		err("fopen");
+	
+	/* TODO : check for fail case */
+	fread(filebuff, sizeof(filebuff), 1, fptr);
+
+	rc = send(socket, filebuff, strlen(filebuff)+1, 0);
+	if (rc < 0)
+		err("send");
+	
+	fclose(fptr);
+
+	return;
+}

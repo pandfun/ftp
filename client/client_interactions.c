@@ -1,4 +1,5 @@
 #include "../core/core.h"
+#include "client.h"
 
 
 
@@ -14,6 +15,8 @@ void client_interactions(int server_socket)
 
 	char buffer[BUFFSIZE];
 	char file_buffer[FILEBUFF];
+
+	clock_t time;
 
 
 	while (1) {
@@ -60,7 +63,40 @@ void client_interactions(int server_socket)
 			memset(buffer, 0, strlen(buffer));
 			continue;
 
-		} else {
+		} else if (!strcmp(buffer, "read")) {
+
+			rc = send(server_socket, buffer, strlen(buffer)+1, 0);
+			if (rc < 0)
+				err("send");
+			
+			memset(buffer, 0, strlen(buffer));
+
+			printf("Enter the file you want to read: ");
+			fgets(buffer, 20 * sizeof(char), stdin);
+			buffer[strcspn(buffer, "\n")] = 0;
+			
+			rc = send(server_socket, buffer, strlen(buffer)+1, 0);
+			if (rc < 0)
+				err("send");
+			
+			time = clock();
+			rc = recv(server_socket, file_buffer, FILEBUFF, 0);
+			time = clock() - time;
+
+			if (rc < 0)
+				err("recv");
+			
+			printf("FILE CONTENTS:\n\n%s\n\n", file_buffer);
+			display_speed(time, strlen(file_buffer)+1);
+
+			memset(file_buffer, 0, strlen(file_buffer));
+			memset(buffer, 0, strlen(buffer));
+			continue;
+
+		}
+		
+		
+		else {
 
 			printf("%s: command not found\n");
 			
@@ -72,4 +108,15 @@ void client_interactions(int server_socket)
 		send(server_socket, buffer, strlen(buffer)+1, 0);
 		memset(buffer, 0, strlen(buffer) * sizeof(char));
 	}
+}
+
+void display_speed(clock_t t, int len)
+{
+	double cpu_time = (double) t / CLOCKS_PER_SEC;
+	double kb_ps = (len / cpu_time) / (1024 * 1024);
+
+	printf("Fetched %d bytes in %lf seconds (%lf kB/sec)\n\n", 
+		len, cpu_time, kb_ps);
+	
+	return;
 }
