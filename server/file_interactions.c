@@ -63,7 +63,7 @@ void list_dir(int socket, int flag)
 
 
 /*
- * This function which look for a file in the pwd
+ * This function will look for a file in the pwd
  * and send it to the client in a file buffer
  */
 void send_file(int socket)
@@ -86,7 +86,7 @@ void send_file(int socket)
 	 * but client will still be active, which will also 
 	 * eventually terminate 
 	 */
-	fptr = fopen(file_name, "r");
+	fptr = fopen(file_name, "rb");
 	if (fptr == 0)
 		err("fopen");
 	

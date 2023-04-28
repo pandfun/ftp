@@ -44,10 +44,13 @@ void server_interactions(int client_socket)
 			memset(buffer, 0, strlen(buffer));
 			continue;
 
-		}
-		
-		
-		else {
+		} else if (!strcmp(buffer, "get")) {
+
+			send_file(client_socket);
+			memset(buffer, 0, strlen(buffer));
+			continue;
+
+		} else {
 
 			memset(buffer, 0, strlen(buffer) * sizeof(char));
 			continue;

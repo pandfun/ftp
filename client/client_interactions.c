@@ -70,33 +70,20 @@ void client_interactions(int server_socket)
 				err("send");
 			
 			memset(buffer, 0, strlen(buffer));
+			recv_file(server_socket, 0);
+			continue;
 
-			printf("Enter the file you want to read: ");
-			fgets(buffer, 20 * sizeof(char), stdin);
-			buffer[strcspn(buffer, "\n")] = 0;
-			
+		} else if (!strcmp(buffer, "get")) {
+
 			rc = send(server_socket, buffer, strlen(buffer)+1, 0);
 			if (rc < 0)
 				err("send");
 			
-			time = clock();
-			rc = recv(server_socket, file_buffer, FILEBUFF, 0);
-			time = clock() - time;
-
-			if (rc < 0)
-				err("recv");
-			
-			printf("FILE CONTENTS:\n\n%s\n\n", file_buffer);
-			display_speed(time, strlen(file_buffer)+1);
-
-			memset(file_buffer, 0, strlen(file_buffer));
 			memset(buffer, 0, strlen(buffer));
+			recv_file(server_socket, 1);
 			continue;
 
-		}
-		
-		
-		else {
+		} else {
 
 			printf("%s: command not found\n");
 			

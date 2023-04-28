@@ -5,8 +5,8 @@ all :
 
 
 # Client
-client : client.o connect_client.o client_interactions.o err.o
-	gcc client.o connect_client.o client_interactions.o err.o -o r_client
+client : client.o connect_client.o client_interactions.o err.o file.o
+	gcc client.o connect_client.o client_interactions.o err.o file.o -o r_client
 
 # Client files
 
@@ -18,6 +18,9 @@ connect_client.o : client/connect_client.c
 
 client_interactions.o : client/client_interactions.c
 	gcc -c client/client_interactions.c
+
+file.o : client/file_interactions.c
+	gcc -c client/file_interactions.c -o file.o
 
 
 # Server
