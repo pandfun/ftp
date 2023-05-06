@@ -37,6 +37,19 @@ void recv_file(int socket, int flag)
 
 	if (rc < 0)
 		err("recv");
+<<<<<<< HEAD
+=======
+	
+
+	/*
+	 * Drawback of doing this is, if my file starts with "ERROR"
+	 * it won't consider the file to be valid
+	 */
+	if (!strcspn(file_buffer, "ERROR")) {
+		printf("%s\n", file_buffer);
+		return;
+	}
+>>>>>>> 9938ede (feat: `get` command to save server files on client)
 
 	if (!flag) {
 		printf("FILE CONTENTS:\n\n%s\n\n", file_buffer);
@@ -56,4 +69,8 @@ void recv_file(int socket, int flag)
 	display_speed(time, strlen(file_buffer)+1);
 
 	return;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 9938ede (feat: `get` command to save server files on client)

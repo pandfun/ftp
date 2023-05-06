@@ -86,18 +86,47 @@ void send_file(int socket)
 	 * but client will still be active, which will also 
 	 * eventually terminate 
 	 */
+<<<<<<< HEAD
 	fptr = fopen(file_name, "rb");
 	if (fptr == 0)
 		err("fopen");
 	
 	/* TODO : check for fail case */
 	fread(filebuff, sizeof(filebuff), 1, fptr);
+=======
+>>>>>>> 9938ede (feat: `get` command to save server files on client)
 
-	rc = send(socket, filebuff, strlen(filebuff)+1, 0);
-	if (rc < 0)
-		err("send");
+	DIR* dir = opendir(file_name);
+	if (dir) { // Directory exists
+
+		strcat(filebuff, "ERROR: Cannot read a directory!");
+		rc = send(socket, filebuff, strlen(filebuff)+1, 0);
+		if (rc < 0)
+			err("send");
+
+	} else if (errno == ENOTDIR) { // Exists, but not directory
 	
-	fclose(fptr);
+		fptr = fopen(file_name, "rb");
+	
+		/* TODO : check for fail case */
+		fread(filebuff, sizeof(filebuff), 1, fptr);
 
+		rc = send(socket, filebuff, strlen(filebuff)+1, 0);
+		if (rc < 0)
+			err("send");
+	
+		fclose(fptr);
+		closedir(dir);
+
+	} else if (errno = ENOENT) {
+
+		strcat(filebuff, "ERROR: File not found!");
+		rc = send(socket, filebuff, strlen(filebuff)+1, 0);
+		if (rc < 0)
+			err("send");
+
+	}
+
+	memset(filebuff, 0, strlen(filebuff));
 	return;
 }
