@@ -86,15 +86,6 @@ void send_file(int socket)
 	 * but client will still be active, which will also 
 	 * eventually terminate 
 	 */
-<<<<<<< HEAD
-	fptr = fopen(file_name, "rb");
-	if (fptr == 0)
-		err("fopen");
-	
-	/* TODO : check for fail case */
-	fread(filebuff, sizeof(filebuff), 1, fptr);
-=======
->>>>>>> 9938ede (feat: `get` command to save server files on client)
 
 	DIR* dir = opendir(file_name);
 	if (dir) { // Directory exists
