@@ -85,7 +85,7 @@ void client_interactions(int server_socket)
 
 		} else {
 
-			printf("%s: command not found\n");
+			printf("%s: command not found\n", buffer);
 			
 			memset(buffer, 0, strlen(buffer) * sizeof(char));
 			continue;
