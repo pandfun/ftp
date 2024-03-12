@@ -61,7 +61,7 @@ def recv_data(connection: socket.socket):
 def run():
 
     while True:
-        msg_content = input("~  $ ")
+        msg_content = input("~ (FTP) $ ")
 
         msg = {}
         msg["content"] = msg_content
@@ -76,15 +76,20 @@ def run():
         if reply == None:
             break
 
-        reply_status = reply["status"]
         reply_content = reply["content"]
 
-        if reply_status == "Fail":
+        # Check the return status from the server
+        # If the server has sent a fail status, it could indicate that some
+        # command has failed. So we don't need to process this command further
+        if reply["status"] == "Fail":
             print(f"[Server returned a fail status! - {reply_content}]")
             continue
 
+        # Handler for 'get' command
         if msg_content == "get":
-            print(f"    => Server : {reply_content}", end="")
+            file_name_info = {"content": ""}
+
+            print(f"    => {reply_content}", end="")
             file_name = input(" : ")
 
             file_name_info = {"content": ""}
@@ -99,16 +104,20 @@ def run():
                 break
 
             if file_content["status"] == "Fail":
-                print(f"Server : {file_content['content']}")
+                print(f"{file_content['content']}")
                 continue
 
+            # Create a file locally (on client) from the file content
             print("[Adding File]")
+            print(f"Content => {file_content['content']}")
             create_file(file_name, file_content["content"])
 
             continue
 
+        # Handler for 'put' command
         if msg_content == "put":
-            print(f"    => Server : {reply_content}", end="")
+
+            print(f"    => {reply_content}", end="")
             file_name = input(" : ")
 
             file_info = {"status": "", "name": "", "content": ""}
@@ -128,10 +137,10 @@ def run():
             if put_status == None:
                 break
 
-            print(f"Server: {put_status['content']}")
+            print(f"{put_status['content']}")
             continue
 
-        print(f"Server : {reply_content}")
+        print(f"{reply_content}")
 
         if msg_content == "exit":
             break
