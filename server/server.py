@@ -16,7 +16,7 @@ server.bind(ADDR)
 
 def run():
     server.listen()
-    print(f"Listening for connections..")
+    print(f"Listening for connections on port {PORT}...")
 
     while True:
 
@@ -63,6 +63,22 @@ def handleClientConn(conn: socket.socket, addr):
                 break
 
             reply = get_file_content(file_name_info["content"])
+
+        elif msg_content == "put":
+            reply["content"] = "Enter name of the file to upload"
+            send_status = send_data(reply, conn)
+            if send_status < 0:
+                break
+
+            file_info = recv_data(conn)
+            if file_info == None:
+                break
+
+            if file_info["status"] == "Fail":
+                reply["content"] = "Aborting file upload"
+            else:
+                file_create_status = create_file(file_info)
+                reply["content"] = file_create_status
 
         # Sending the response to client
         send_status = send_data(reply, conn)

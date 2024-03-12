@@ -62,3 +62,19 @@ def get_file_content(file_name):
         response["content"] = f"Error : {e}"
 
     return response
+
+
+# Function to create a file on server
+# Returns : { SuccessMsg : "Success", ErrorMsg : "Fail" }
+def create_file(file_info):
+    try:
+        file_name = file_info["name"]
+        file_content = file_info["content"]
+
+        with open(file_name, "w") as file:
+            file.write(file_content)
+
+            return f"File {file_name} received and stored on server!"
+
+    except Exception as e:
+        return f"Error : {e}"

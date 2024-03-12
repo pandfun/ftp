@@ -61,7 +61,7 @@ def recv_data(connection: socket.socket):
 def run():
 
     while True:
-        msg_content = input("You: ")
+        msg_content = input("~  $ ")
 
         msg = {}
         msg["content"] = msg_content
@@ -91,6 +91,8 @@ def run():
             file_name_info["content"] = file_name
 
             send_status = send_data(file_name_info, client)
+            if send_status < 0:
+                break
 
             file_content = recv_data(client)
             if file_content == None:
@@ -100,9 +102,33 @@ def run():
                 print(f"Server : {file_content['content']}")
                 continue
 
-            print("[Adding File..]")
+            print("[Adding File]")
             create_file(file_name, file_content["content"])
 
+            continue
+
+        if msg_content == "put":
+            print(f"    => Server : {reply_content}", end="")
+            file_name = input(" : ")
+
+            file_info = {"status": "", "name": "", "content": ""}
+
+            file_content = get_file_content(file_name)
+            if file_content == None:
+                file_info["status"] = "Fail"
+
+            file_info["name"] = file_name
+            file_info["content"] = file_content
+
+            send_status = send_data(file_info, client)
+            if send_status < 0:
+                break
+
+            put_status = recv_data(client)
+            if put_status == None:
+                break
+
+            print(f"Server: {put_status['content']}")
             continue
 
         print(f"Server : {reply_content}")
@@ -126,6 +152,25 @@ def create_file(file_name, file_content):
 
     except Exception as e:
         print(f"[Failed to create file, try again : {e}]")
+
+
+# Function to send the file contents
+# Returns : { FileContent : "Success", None : "Fail"}
+def get_file_content(file_name):
+
+    try:
+        with open(file_name, "r") as file:
+            file_content = file.read()
+
+            return file_content
+
+    except FileNotFoundError:
+        print(f"Error: {file_name} not found!")
+
+    except Exception as e:
+        print(f"Error : {e}")
+
+    return None
 
 
 run()
