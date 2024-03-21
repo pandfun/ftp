@@ -16,7 +16,9 @@ server.bind(ADDR)
 
 def run():
     server.listen()
-    print(f"Listening for connections on port {PORT}...")
+    print(f"Listening for client connections")
+    print(f"SERVER = {SERVER}")
+    print(f"PORT = {PORT}")
 
     while True:
 
