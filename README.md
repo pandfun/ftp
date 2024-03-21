@@ -5,7 +5,8 @@
 - [How to use?](#how-to-use)
   - [Running the Server](#running-the-server)
   - [Running the Client](#running-the-client)
-- [Documentation](#documentation)
+- [Features](#features) (wip)
+- [Documentation](#documentation) (wip)
 
 
 ---
@@ -36,11 +37,20 @@
   <br><br>
 
 > [!IMPORTANT]  
-> Both the `server.py` and `client.py` files have macros for the Server's IP and Port.
+> Both the `server.py` and `client.py` files have macros (*variables*) for the Server's IP and Port.
 > 
-> By default, the IP Address (*the `SERVER` Macro*) is set to the local host, so client and server have to be on the same machine.
+> By default, the IP Address (*the `SERVER` Macro*) is set to the local host.
+> So client tries to connect to it's local host (which may not connect to the correct server if you're using them from different machines).
 > 
-> If you want to run the server and client from different machines, then replace the macro with the IP Address of the ***machine on which the server is running***
+> If you want to run the server and client from different machines, replace the macro with the IP Address of the ***machine on which the server is running***
+
+
+---
+
+
+## Features
+
+*Work-in-progress*
 
 ---
 
