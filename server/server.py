@@ -6,7 +6,7 @@ from commands import *
 
 FORMAT = "utf-8"
 
-PORT = 9004
+PORT = 9003
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 
@@ -16,12 +16,11 @@ server.bind(ADDR)
 
 def run():
     server.listen()
-    print(f"Listening for client connections")
-    print(f"SERVER = {SERVER}")
-    print(f"PORT = {PORT}")
+
+    print(f"SERVER = {SERVER}  &  PORT = {PORT}")
+    print(f"Listening for client connections..")
 
     while True:
-
         conn, addr = server.accept()
 
         thread = threading.Thread(target=handleClientConn, args=(conn, addr))
@@ -47,40 +46,18 @@ def handleClientConn(conn: socket.socket, addr):
         if msg_content == "exit":
             reply["content"] = "Closing connection.."
 
-        elif msg_content == "hi":
-            reply["content"] = "Hello client, this is server speaking"
-
         elif msg_content == "list":
             reply = list_dir()
 
         elif msg_content == "get":
-            reply["content"] = "Enter the name of the file"
-
-            send_status = send_data(reply, conn)
-            if send_status < 0:
+            reply = getCmdHandler(conn)
+            if reply == None:
                 break
-
-            file_name_info = recv_data(conn)
-            if file_name_info == None:
-                break
-
-            reply = get_file_content(file_name_info["content"])
 
         elif msg_content == "put":
-            reply["content"] = "Enter name of the file to upload"
-            send_status = send_data(reply, conn)
-            if send_status < 0:
+            reply["content"] = putCmdHandler(conn)
+            if reply["content"] == None:
                 break
-
-            file_info = recv_data(conn)
-            if file_info == None:
-                break
-
-            if file_info["status"] == "Fail":
-                reply["content"] = "Aborting file upload"
-            else:
-                file_create_status = create_file(file_info)
-                reply["content"] = file_create_status
 
         # Sending the response to client
         send_status = send_data(reply, conn)
@@ -129,6 +106,44 @@ def recv_data(connection: socket.socket):
     except Exception as e:
         print(f"[Unable to recv data from client : {e}]")
         return None
+
+
+# Handler for the 'get' command
+# Gets the file name to be transfered to the client and returns the content
+# Returns : { file_content : "Success", None : "Fail" }
+def getCmdHandler(conn: socket.socket):
+    reply = {"status": "Success", "content": "Enter the name of the file"}
+
+    send_status = send_data(reply, conn)
+    if send_status < 0:
+        return None
+
+    file_name_info = recv_data(conn)
+    if file_name_info == None:
+        return None
+
+    return get_file_content(file_name_info["content"])
+
+
+# Handler for the 'put' command
+# Gets the name and content of the file and creates a new file on server
+# Returns : { file_creation_status }
+def putCmdHandler(conn: socket.socket):
+    reply = {"status": "Success", "content": "Enter name of the file to upload"}
+
+    send_status = send_data(reply, conn)
+    if send_status < 0:
+        return None
+
+    file_info = recv_data(conn)
+    if file_info == None:
+        return None
+
+    if file_info["status"] == "Fail":
+        return "Aborting file upload"
+    else:
+        file_create_status = create_file(file_info)
+        return file_create_status
 
 
 run()

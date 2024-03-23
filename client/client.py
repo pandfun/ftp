@@ -3,7 +3,7 @@ import json
 
 FORMAT = "utf-8"
 
-PORT = 9004
+PORT = 9003
 SERVER = "127.0.1.1"
 ADDR = (SERVER, PORT)
 
@@ -109,7 +109,6 @@ def run():
 
             # Create a file locally (on client) from the file content
             print("[Adding File]")
-            print(f"Content => {file_content['content']}")
             create_file(file_name, file_content["content"])
 
             continue

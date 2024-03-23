@@ -39,7 +39,6 @@ def list_dir(dir="."):
     return response
 
 
-# Command Name : 'copy'
 # Function to send the file contents
 # Returns : { FileContent : "Success", Error : "Fail"}
 def get_file_content(file_name):
