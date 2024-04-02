@@ -2,25 +2,26 @@
 
 
 ## Table of Contents
-- [Usage](#usage)
-  - [Running the Server](#running-the-server)
-  - [Running the Client](#running-the-client)
+
+- [Getting Started](#getting-started)
+- [Commands](#commands)
 - [Features](#features)
-  - [Implemented](#implemented)
-  - [Pending](#pending)
+- [Changelog](CHANGELOG.md)
+
 
 ---
 
+## Getting Started
 
-## Usage
+Both the `server/server.py` and `client/client.py` files have macros (*variables*) for the Server's IP and Port.
+ 
+By default, the IP Address (*the `SERVER` Macro*) is set to the local host.
+So client tries to connect to it's local host (which may not work if the server is on a different machine).
 
-> [!IMPORTANT]  
-> Both the `server.py` and `client.py` files have macros (*variables*) for the Server's IP and Port.
-> 
-> By default, the IP Address (*the `SERVER` Macro*) is set to the local host.
-> So client tries to connect to it's local host (which may not work if the server is on a different machine).
-> 
-> If you want to run the server and client from different machines, replace the macro with the IP Address of the ***machine on which the server is running***
+If you want to run the server and client from different machines, replace the macro with the IP Address of the ***machine on which the server is running***
+
+> [!IMPORTANT]
+> Make sure you have read and understood the section above before you proceed to set up the server and client
 
 
 - ### Running the Server
@@ -43,6 +44,29 @@
   ```bash
   python client.py
   ```
+<br>
+
+---
+
+## Commands
+
+```txt
+usage : <cmd-name> <args>
+
+    list  List all the files in the directory <dir-path>. 
+          If there is no second argument, then it lists the server's root directory
+    usage : list <dir-path>
+    	
+    	
+    get - Get the file named <file-name> that is stored on the server
+    usage : get <file-name>
+
+
+    put - Store the file named <file-name> on the server
+    usage : put <file-name>
+```
+
+<br>
 
 ---
 
@@ -63,7 +87,9 @@
   - [ ] **User authentication** - Implement user authentication to authenticate users and restrict access of secure servers.
   - [ ] **Improved server logging** - Better server logging to record detailed information about client activities and server events for auditing and troubleshooting purposes.
 
-  
+
+<br>
+
 ---
 
 <br>
