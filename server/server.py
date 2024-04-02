@@ -2,148 +2,123 @@ import socket
 import threading
 import json
 
-from commands import *
+# Import all the command handlers
+from commandHandler import *
 
 FORMAT = "utf-8"
 
-PORT = 9003
+PORT = 9001
+
+# Sets the server IP to local host
 SERVER = socket.gethostbyname(socket.gethostname())
-ADDR = (SERVER, PORT)
-
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind(ADDR)
+SERVER_ADDR = (SERVER, PORT)
 
 
-def run():
-    server.listen()
+MAX_CONNECTIONS = 10
 
-    print(f"SERVER = {SERVER}  &  PORT = {PORT}")
+
+# Function to create a server socket and bind it to the address
+def createServer():
+    try:
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind(SERVER_ADDR)
+
+        return server
+    except Exception as e:
+        print(f"Failed to create server socket : {e}")
+
+    return None
+
+
+def startServer():
+    server = createServer()
+    if server is None:
+        exit(1)
+
+    # Start listening for incoming client connections
+    server.listen(MAX_CONNECTIONS)
+
+    print(f"Port = {PORT} & Server IP = {SERVER}")
     print(f"Listening for client connections..")
 
     while True:
         conn, addr = server.accept()
 
-        thread = threading.Thread(target=handleClientConn, args=(conn, addr))
+        thread = threading.Thread(target=clientHandler, args=(conn, addr))
         thread.start()
 
-        print(f"[Active Client => {threading.active_count() - 1}]")
+        # We do -1, so we don't count the thread on which the
+        # server is listening for connections
+        print(f"[Active Clients => {threading.active_count() - 1}]")
 
 
-# Client handler function
-def handleClientConn(conn: socket.socket, addr):
+# Function to handle a client connection
+def clientHandler(connection: socket.socket, addr):
 
-    print(f"New Connection : {addr}")
+    print(f"New connection : {addr}")
 
     while True:
-        msg = recv_data(conn)
-        if msg == None:
+        request = recvData(connection)
+        if request is None:
             break
 
-        reply = {"status": "Success", "content": "Command Not Found"}
+        response = {}
 
-        msg_content = msg["content"]
+        command = request["command"]
 
-        if msg_content == "exit":
-            reply["content"] = "Closing connection.."
+        if command == "exit":
+            response["status"] = "Success"
+            response["response"] = "Closing the connection.."
 
-        elif msg_content == "list":
-            reply = list_dir()
+        elif command == "list":
+            response = listCmdHandler(request)
 
-        elif msg_content == "get":
-            reply = getCmdHandler(conn)
-            if reply == None:
-                break
+        elif command == "get":
+            response = getCmdHandler(request)
 
-        elif msg_content == "put":
-            reply["content"] = putCmdHandler(conn)
-            if reply["content"] == None:
-                break
+        elif command == "put":
+            response = putCmdHandler(request)
 
-        # Sending the response to client
-        send_status = send_data(reply, conn)
-        if send_status < 0:
+        sendStatus = sendData(response, connection)
+        if sendStatus < 0:
             break
 
-        if msg_content == "exit":
+        if command == "exit":
             break
 
-    conn.close()
+    connection.close()
+    return
 
 
-# Function to send data to the client (via connection)
-# Returns : { 0 : "Success", -1: "Fail" }
-def send_data(data, connection: socket.socket):
-
+# Function to send data to the client
+def sendData(data, connection: socket.socket):
     try:
-        # Convert our data dictionary to a JSON-fromatted string
-        json_data = json.dumps(data)
+        jsonData = json.dumps(data)
+        jsonDataLen = len(jsonData).to_bytes(4, byteorder="big")
 
-        msg_len = len(json_data).to_bytes(4, byteorder="big")
-
-        connection.sendall(msg_len)
-        connection.sendall(json_data.encode(FORMAT))
+        connection.sendall(jsonDataLen)
+        connection.sendall(jsonData.encode(FORMAT))
 
         return 0
-
     except Exception as e:
-        print(f"[Unable to send data to client : {e}]")
+        print(f"Unable to send data to client\n{e}")
         return -1
 
 
-# Function to get data from the client (via connection)
-# Returns : { data : "Success", None : "Fail" }
-def recv_data(connection: socket.socket):
-
+# Function to receive data from the client
+def recvData(connection: socket.socket):
     try:
-        msg_len_bytes = connection.recv(4)
-        msg_len = int.from_bytes(msg_len_bytes, byteorder="big")
+        dataLenBytes = connection.recv(4)
+        dataLen = int.from_bytes(dataLenBytes, byteorder="big")
 
-        data_bytes = connection.recv(msg_len)
-        data = json.loads(data_bytes.decode(FORMAT))
+        dataBytes = connection.recv(dataLen)
+        data = json.loads(dataBytes.decode(FORMAT))
 
         return data
-
     except Exception as e:
-        print(f"[Unable to recv data from client : {e}]")
+        print(f"Unable to recv data from the client\n{e}")
         return None
 
 
-# Handler for the 'get' command
-# Gets the file name to be transfered to the client and returns the content
-# Returns : { file_content : "Success", None : "Fail" }
-def getCmdHandler(conn: socket.socket):
-    reply = {"status": "Success", "content": "Enter the name of the file"}
-
-    send_status = send_data(reply, conn)
-    if send_status < 0:
-        return None
-
-    file_name_info = recv_data(conn)
-    if file_name_info == None:
-        return None
-
-    return get_file_content(file_name_info["content"])
-
-
-# Handler for the 'put' command
-# Gets the name and content of the file and creates a new file on server
-# Returns : { file_creation_status }
-def putCmdHandler(conn: socket.socket):
-    reply = {"status": "Success", "content": "Enter name of the file to upload"}
-
-    send_status = send_data(reply, conn)
-    if send_status < 0:
-        return None
-
-    file_info = recv_data(conn)
-    if file_info == None:
-        return None
-
-    if file_info["status"] == "Fail":
-        return "Aborting file upload"
-    else:
-        file_create_status = create_file(file_info)
-        return file_create_status
-
-
-run()
+# Running the server
+startServer()

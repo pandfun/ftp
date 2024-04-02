@@ -3,16 +3,16 @@ import json
 
 FORMAT = "utf-8"
 
-PORT = 9003
+PORT = 9001
 SERVER = "127.0.1.1"
+
 ADDR = (SERVER, PORT)
 
 
-# Connect to the server
 try:
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect(ADDR)
-    print(f"[Connected to the server : {SERVER}]")
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.connect(ADDR)
+    print(f"[Connected to the server : {SERVER}:{PORT}]")
 
 except Exception as e:
     print(f"Unable to connect to the server : {e}")
@@ -21,162 +21,182 @@ except Exception as e:
 
 # Function to send data to the server (via connection)
 # Returns : { 0 : "Success", -1: "Fail" }
-def send_data(data, connection: socket.socket):
+def sendData(data, connection: socket.socket):
 
     try:
         # Convert our data dictionary to a JSON-fromatted string
-        json_data = json.dumps(data)
+        jsonData = json.dumps(data)
 
-        msg_len = len(json_data).to_bytes(4, byteorder="big")
+        jsonDataLen = len(jsonData).to_bytes(4, byteorder="big")
 
-        connection.sendall(msg_len)
-        connection.sendall(json_data.encode(FORMAT))
+        connection.sendall(jsonDataLen)
+        connection.sendall(jsonData.encode(FORMAT))
 
         return 0
 
     except Exception as e:
-        print(f"[Unable to send data to server : {e}]")
+        print(f"[Unable to send data to server\n{e}]")
         return -1
 
 
 # Function to get data from the client (via connection)
 # Returns : { data : "Success", None : "Fail" }
-def recv_data(connection: socket.socket):
+def recvData(connection: socket.socket):
 
     try:
-        msg_len_bytes = connection.recv(4)
-        msg_len = int.from_bytes(msg_len_bytes, byteorder="big")
+        msgLenBytes = connection.recv(4)
+        msgLen = int.from_bytes(msgLenBytes, byteorder="big")
 
-        data_bytes = connection.recv(msg_len)
-        data = json.loads(data_bytes.decode(FORMAT))
+        dataBytes = connection.recv(msgLen)
+        data = json.loads(dataBytes.decode(FORMAT))
 
         return data
 
     except Exception as e:
-        print(f"[Unable to recv data from server : {e}]")
+        print(f"[Unable to recv data from server\n{e}]")
         return None
 
 
 # Server Communication
 def run():
 
+    print("Type 'help' to see list of available commands")
+
     while True:
-        msg_content = input("~ (FTP) $ ")
+        command = input("~ (FTP) $ ")
 
-        msg = {}
-        msg["content"] = msg_content
+        request = {}
+        response = {}
 
-        # Send message to server
-        send_status = send_data(msg, client)
-        if send_status < 0:
-            break
+        parsedCommand = command.split()
 
-        # Recv response from server
-        reply = recv_data(client)
-        if reply == None:
-            break
+        commandName = parsedCommand[0]
 
-        reply_content = reply["content"]
-
-        # Check the return status from the server
-        # If the server has sent a fail status, it could indicate that some
-        # command has failed. So we don't need to process this command further
-        if reply["status"] == "Fail":
-            print(f"[Server returned a fail status! - {reply_content}]")
+        if commandName == "help":
+            helpCmd()
             continue
 
-        # Handler for 'get' command
-        if msg_content == "get":
-            file_name_info = {"content": ""}
+        elif commandName == "exit":
+            request["command"] = "exit"
 
-            print(f"    => {reply_content}", end="")
-            file_name = input(" : ")
-
-            file_name_info = {"content": ""}
-            file_name_info["content"] = file_name
-
-            send_status = send_data(file_name_info, client)
-            if send_status < 0:
-                break
-
-            file_content = recv_data(client)
-            if file_content == None:
-                break
-
-            if file_content["status"] == "Fail":
-                print(f"{file_content['content']}")
+        elif commandName == "list":
+            if len(parsedCommand) > 2:
+                printWrongUsage("list")
                 continue
 
-            # Create a file locally (on client) from the file content
-            print("[Adding File]")
-            create_file(file_name, file_content["content"])
+            request["command"] = "list"
 
+            if len(parsedCommand) == 1:
+                request["path"] = "."
+            else:
+                request["path"] = parsedCommand[1]
+
+        elif commandName == "get":
+            if len(parsedCommand) > 2:
+                printWrongUsage("get")
+                continue
+
+            request["command"] = "get"
+            request["fileName"] = parsedCommand[1]
+
+        elif commandName == "put":
+            if len(parsedCommand) > 2:
+                printWrongUsage("put")
+                continue
+
+            request["command"] = "put"
+
+            fileName = parsedCommand[1]
+            fileContent = getFileContent(fileName)
+            if fileContent is None:
+                continue
+
+            request["fileName"] = fileName
+            request["fileContent"] = fileContent
+
+        else:
+            print(f"Command not found! Type 'help' to see list of all commands")
             continue
 
-        # Handler for 'put' command
-        if msg_content == "put":
-
-            print(f"    => {reply_content}", end="")
-            file_name = input(" : ")
-
-            file_info = {"status": "", "name": "", "content": ""}
-
-            file_content = get_file_content(file_name)
-            if file_content == None:
-                file_info["status"] = "Fail"
-
-            file_info["name"] = file_name
-            file_info["content"] = file_content
-
-            send_status = send_data(file_info, client)
-            if send_status < 0:
-                break
-
-            put_status = recv_data(client)
-            if put_status == None:
-                break
-
-            print(f"{put_status['content']}")
-            continue
-
-        print(f"{reply_content}")
-
-        if msg_content == "exit":
+        sendStatus = sendData(request, server)
+        if sendStatus < 0:
             break
 
-    print("[Terminating...]")
-    client.close()
+        response = recvData(server)
+        if response["status"] == "Fail":
+            print(f"Server sent fail status : {response['response']}")
+            continue
+
+        if commandName == "get":
+            createFile(request["fileName"], response["response"])
+            continue
+
+        print(f"{response['response']}")
+
+        if commandName == "exit":
+            break
+
+    server.close()
+
+
+def printWrongUsage(cmd):
+    print("Wrong usage :", end=" ")
+
+    if cmd == "list":
+        print("list <path>")
+    elif cmd == "get":
+        print("get <file_name>")
+    elif cmd == "put":
+        print("put <file_name>")
+
+
+def helpCmd():
+    print(
+        """usage : <cmd-name> <args>
+
+    list - List all the files in the directory <dir-path>. 
+    If there is no second argument, then it lists the server's root directory
+    usage : list <dir-path>
+    	
+    	
+    get - Get the file named <file-name> that is stored on the server
+    usage : get <file-name>
+    
+    put - Store the file named <file-name> on the server
+    usage : put <file-name>
+    """
+    )
 
 
 # Function to create file
 # Returns : { None }
-def create_file(file_name, file_content):
+def createFile(fileName, fileContent):
 
     try:
-        with open(file_name, "w") as file:
-            file.write(file_content)
+        with open(fileName, "w") as file:
+            file.write(fileContent)
 
             print("[File Created!]")
 
     except Exception as e:
-        print(f"[Failed to create file, try again : {e}]")
+        print(f"[Failed to create file, try again\n{e}]")
 
 
 # Function to send the file contents
 # Returns : { FileContent : "Success", None : "Fail"}
-def get_file_content(file_name):
+def getFileContent(fileName):
 
     try:
-        with open(file_name, "r") as file:
+        with open(fileName, "r") as file:
             file_content = file.read()
 
             return file_content
 
     except FileNotFoundError:
-        print(f"Error: {file_name} not found!")
+        print(f"Error: {fileName} not found!")
 
     except Exception as e:
-        print(f"Error : {e}")
+        print(f"Error\n{e}")
 
     return None
 
