@@ -1,5 +1,4 @@
-# Multithreaded FTP Server-Client Model
-
+# Multithreaded File Transfer Server
 
 ## Table of Contents
 
