@@ -2,6 +2,9 @@
 
 All notable changes to this project will be documented in this file.
 
+## 3 Apr, 2024
+- Implemented server-side file locks. This prevents multiple clients from accessing the same file and causing race conditions
+
 ## 2 Apr, 2024
 
 - Client parses the command arguments directly, just like how it would be done in a terminal
