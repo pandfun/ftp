@@ -1,4 +1,5 @@
 import os
+from filelock import FileLock
 
 
 def listDir(path):
@@ -31,6 +32,10 @@ def getFileContent(fileName):
 
     response = {}
 
+    fileLockName = fileName + ".lock"
+    lock = FileLock(fileLockName)
+
+    lock.acquire()
     try:
         with open(fileName, "r") as file:
             fileContent = file.read()
@@ -42,6 +47,11 @@ def getFileContent(fileName):
         response["status"] = "Fail"
         response["response"] = f"Error\n{e}"
 
+    finally:
+        lock.release()
+        if os.path.exists(fileLockName):
+            os.remove(fileLockName)
+
     return response
 
 
@@ -49,6 +59,10 @@ def createFile(fileName, fileContent):
 
     response = {}
 
+    fileLockName = fileName + ".lock"
+    lock = FileLock(fileLockName)
+
+    lock.acquire()
     try:
         with open(fileName, "w") as file:
             file.write(fileContent)
@@ -59,5 +73,10 @@ def createFile(fileName, fileContent):
     except Exception as e:
         response["status"] = "Fail"
         response["response"] = f"Error\n{e}"
+
+    finally:
+        lock.release()
+        if os.path.exists(fileLockName):
+            os.remove(fileLockName)
 
     return response

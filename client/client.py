@@ -123,6 +123,9 @@ def run():
             break
 
         response = recvData(server)
+        if response is None:
+            break
+
         if response["status"] == "Fail":
             print(f"Server sent fail status : {response['response']}")
             continue
